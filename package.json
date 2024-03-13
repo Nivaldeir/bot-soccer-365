@@ -4,7 +4,9 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "tsnd src/index.ts"
+    "dev": "tsnd src/index.ts",
+    "build": "npx tsc",
+    "production":"npm run build && npm dist/index.js"
   },
   "devDependencies": {
     "@types/node": "^20.11.25",

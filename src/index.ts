@@ -7,7 +7,7 @@ import { ReceivingEvents } from "./usecases/receiving-events";
 
 const emitter: Emitter = new Emitter();
 new ReceivingEvents(emitter)
-new Calculate(emitter, 1.00).execute()
+new Calculate(emitter, 10.00).execute()
 const puppeteer = new GetResult(emitter)
 
 async function main() {
