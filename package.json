@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "tsnd src/index.ts",
+    "dev": "tsnd --env-file=.env src/index.ts",
     "build": "npx tsc",
     "production":"npm run build && npm dist/index.js"
   },
