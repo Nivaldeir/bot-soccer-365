@@ -1,52 +1,49 @@
-import { Emitter } from "../domain/event";
-import Wallet from "../domain/wallet";
-import config from "../setting/index";
+import { File } from "../infra/file";
+import { CalculateWalletLoss } from "./validate-loss-wallet";
 
-export class CalculateWallet {
-  wallet = new Wallet(config.wallet);
-  prohibited
-  prohibitedDefault
-  loss = 0;
-  lossCount = 0
-  winCount = 0
-  roundLoss = 0;
-  constructor(readonly nameWallet: string) {
-    this.prohibitedDefault = config.price;
-    this.prohibited = config.price;
+type IWallet = {
+  amount: number
+  win: (number: number) => void
+  loss: (number: number) => void
+}
+
+export class CalculateWallet extends CalculateWalletLoss {
+  constructor(readonly wallet: IWallet, private contribution: number = 0.75, readonly league: string) {
+    super()
   }
-  execute(input: InputOdd) {
+  async execute(input: InputOdd) {
     if (this.again()) {
-      this.prohibited = 0
+      if (input.winner === "Sim") {
+        this.contribution * parseFloat(input.odd)
+        this.wallet.win(this.contribution)
+        this.contribution = parseFloat(process.env.contribution!)
+        this.reset()
+      }
+      if (input.winner === "Não") {
+        this.wallet.loss(this.contribution)
+        this.contribution = this.contribution * 2
+        this.registerLoss()
+      }
+      await this.saved(input)
+      console.clear()
+      console.log(`----------------------------------------------------------------------`)
+      console.log(`[${this.league}] Aporte: ${this.contribution.toFixed(2)} Loss: ${this.lossCount}`)
+      console.log(`[${this.league}] Saldo: ${this.wallet.amount.toFixed(2)}`)
+      console.log(`----------------------------------------------------------------------`)
+      return this.wallet.amount
     }
-    if (this.loss === 0 && this.roundLoss === 0) {
-      this.prohibited = this.prohibitedDefault
-    }
-    if (input.winner === "Sim" && this.roundLoss == 0) {
-      this.wallet.win(this.prohibited * parseFloat(input.odd))
-      this.prohibited = this.prohibitedDefault
-      console.log(`[Aporte] ${this.prohibited}`)
-      this.winCount++;
-      this.loss = 0;
-    }
-    if (input.winner === "Não") {
-      this.wallet.loss(this.prohibited)
-      console.log(`[LOSS ${this.loss}] ${this.prohibited}`)
-      this.prohibited = this.prohibited * 2
-      this.loss++;
-      this.lossCount++
-    }
-    console.log(`[${this.nameWallet}] ${this.wallet.amount.toLocaleString('pt-BR')} [Win] ${this.winCount} [Loss] ${this.lossCount}`)
-    return this.prohibited
   }
-  private again() {
-    if (this.loss === 2 && this.lossCount != 2) {
-      this.roundLoss++;
-      return false
-    } else if (this.roundLoss == 2) {
-      this.loss = 0
-      return true
+  async saved(data: InputOdd) {
+    let _path = process.cwd()
+    const readLeague = await File.Read(`${_path}/${this.league}.json`)
+    console.log(`${_path}/${this.league}.json`)
+    if (readLeague) {
+      readLeague.push({ ...data, wallet: this.wallet.amount, contribution: this.contribution })
+      File.Write(this.league, readLeague)
+      return
+    } else {
+      File.Write(this.league, [])
     }
-    return false
   }
 }
 type InputOdd = {

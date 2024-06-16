@@ -11,6 +11,9 @@ export class File {
 * @param path Local para realizar a leitura
 */
   static Read(pathFile: string) {
-    return JSON.parse(fs.readFileSync(pathFile, 'utf-8'))
+    try {
+      return JSON.parse(fs.readFileSync(pathFile, 'utf-8'))
+    } catch (error) {
+    }
   }
 }
